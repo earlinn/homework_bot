@@ -153,7 +153,7 @@ def main():
             logger.info('В Telegram чат отправлено сообщение об ошибке.')
             time.sleep(RETRY_TIME)
         else:
-            logger.error('Другой сбой в работе бота!')
+            ...
 
 
 if __name__ == '__main__':
