@@ -16,17 +16,14 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filename='main.log',
-    level=logging.INFO
-)
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 console_handler = logging.StreamHandler(stream=sys.stdout)
 logger.addHandler(console_handler)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    fmt='%(asctime)s - %(levelname)s - %(funcName)s: %(lineno)d - %(message)s',
+    datefmt='%d-%m-%Y %H:%M:%S'
+)
 console_handler.setFormatter(formatter)
 
 RETRY_TIME = 600
@@ -34,7 +31,7 @@ ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
-HOMEWORK_STATUSES = {
+HOMEWORK_VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -50,8 +47,13 @@ def get_api_answer(current_timestamp):
     """Делает запрос к единственному эндпоинту API-сервиса."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
+    query_kwargs = {
+        'url': ENDPOINT,
+        'headers': HEADERS,
+        'params': params,
+    }
 
-    response = requests.get(ENDPOINT, headers=HEADERS, params=params)
+    response = requests.get(**query_kwargs)
     if response.status_code != HTTPStatus.OK:
         raise Exception(
             f'Эндпойнт {ENDPOINT} недоступен! '
@@ -85,11 +87,11 @@ def parse_status(homework):
     if not homework_status:
         raise KeyError('В домашней работе отсутствует ключ `homework_status`!')
 
-    if homework_status not in HOMEWORK_STATUSES:
+    if homework_status not in HOMEWORK_VERDICTS:
         raise exceptions.UndocumentedHomeworkStatusError(
             f'Статуса {homework_status} нет в словаре HOMEWORK_STATUSES!')
 
-    verdict = HOMEWORK_STATUSES[homework_status]
+    verdict = HOMEWORK_VERDICTS[homework_status]
 
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -111,6 +113,16 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
+    logging.basicConfig(
+        format=(
+            '%(asctime)s - %(levelname)s - '
+            '%(funcName)s: %(lineno)d - %(message)s'
+        ),
+        filename='main.log',
+        level=logging.INFO,
+        datefmt='%d-%m-%Y %H:%M:%S'
+    )
+
     if not check_tokens():
         raise KeyboardInterrupt(
             'Отсутствуют обязательные переменные окружения!')
