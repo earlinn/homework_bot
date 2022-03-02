@@ -1,3 +1,9 @@
+class HTTPStatusError(Exception):
+    """Вызывается, когда API вернул код ответа, не равный 200 (не ОК)."""
+
+    pass
+
+
 class UndocumentedHomeworkStatusError(Exception):
     """Вызывается, если API передало неизвестный статус домашней работы."""
 

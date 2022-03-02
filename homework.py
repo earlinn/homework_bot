@@ -44,8 +44,7 @@ def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Окончание отправки сообщения в Telegram чат.')
-        logger.info(
-            'В Telegram чат отправлено сообщение о статусе домашней работы.')
+        logger.info(f'Бот отправил сообщение: {message}.')
     except Exception as error:
         logger.error(f'Ошибка отправки сообщения в Telegram чат: {error}.')
 
@@ -54,15 +53,22 @@ def get_api_answer(current_timestamp):
     """Делает запрос к единственному эндпоинту API-сервиса."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
-    query_kwargs = {
-        'url': ENDPOINT,
-        'headers': HEADERS,
-        'params': params,
-    }
-
-    response = requests.get(**query_kwargs)
+    try:
+        query_kwargs = {
+            'url': ENDPOINT,
+            'headers': HEADERS,
+            'params': params,
+        }
+        response = requests.get(**query_kwargs)
+    except Exception as error:
+        logger.error(f'Ошибка при формировании запроса к эндпойнту: {error}.')
+        # этот raise нужен, чтобы попасть в функцию main,
+        # которая вызовет функцию send_message, чтобы бот отправил
+        # сообщение об этой ошибке в чат.
+        # Сам бот определен в функции main, так было в прекоде.
+        raise error
     if response.status_code != HTTPStatus.OK:
-        raise Exception(
+        raise exceptions.HTTPStatusError(
             f'Эндпойнт {ENDPOINT} недоступен! '
             f'API вернул код {response.status_code}.'
         )
@@ -74,12 +80,12 @@ def check_response(response):
     Проверяет корректность ответа API-сервиса.
     Возвращает список домашних работ.
     """
-    if not response:
-        raise Exception(f'Ошибка при запросе к API: {Exception}!')
+    # ситуация с отсутствием переменной response теперь обрабатывается
+    # в блоке except функции get_api_answer
     if 'homeworks' not in response:
         raise exceptions.NoHomeworksKeyInResponseError(
             'Ключ homeworks отсутствует в ответе API!')
-    if type(response) is not dict:
+    if not isinstance(response, dict):
         raise TypeError('Ответ API не является словарём!')
     if type(response['homeworks']) is not list:
         raise TypeError(
@@ -136,6 +142,7 @@ def main():
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
+    prev_error_report = {}
 
     while True:
         try:
@@ -156,10 +163,14 @@ def main():
             raise error
 
         except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            send_message(bot, message)
             logger.error(f'Сбой в работе программы: {error}')
-            logger.info('В Telegram чат отправлено сообщение об ошибке.')
+            current_error_report = {
+                error.__class__.__name__: str(error)
+            }
+            if current_error_report != prev_error_report:
+                message = f'Сбой в работе программы: {error}'
+                send_message(bot, message)
+                prev_error_report = current_error_report.copy()
             time.sleep(RETRY_TIME)
         else:
             ...
