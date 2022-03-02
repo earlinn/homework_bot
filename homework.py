@@ -40,7 +40,14 @@ HOMEWORK_VERDICTS = {
 
 def send_message(bot, message):
     """Отправляет в Telegram чат сообщения."""
-    bot.send_message(TELEGRAM_CHAT_ID, message)
+    logger.info('Начало отправки сообщения в Telegram чат.')
+    try:
+        bot.send_message(TELEGRAM_CHAT_ID, message)
+        logger.info('Окончание отправки сообщения в Telegram чат.')
+        logger.info(
+            'В Telegram чат отправлено сообщение о статусе домашней работы.')
+    except Exception as error:
+        logger.error(f'Ошибка отправки сообщения в Telegram чат: {error}.')
 
 
 def get_api_answer(current_timestamp):
@@ -138,12 +145,7 @@ def main():
                 logger.debug('Новых статусов по домашним работам нет.')
             for homework in homeworks_list:
                 homework_status = parse_status(homework)
-                homework_name = homework['homework_name']
                 send_message(bot, homework_status)
-                logger.info((
-                    'В Telegram чат отправлено сообщение '
-                    f'о статусе домашней работы {homework_name}.'
-                ))
 
             current_timestamp = int(time.time())
             time.sleep(RETRY_TIME)
@@ -151,11 +153,6 @@ def main():
         except telegram.error.Unauthorized as error:
             logger.error(
                 'Неверный TELEGRAM_TOKEN! Ошибка telegram.error.Unauthorized.')
-            raise error
-
-        except telegram.error.BadRequest as error:
-            logger.error(
-                'Неверный TELEGRAM_CHAT_ID! Ошибка telegram.error.BadRequest.')
             raise error
 
         except Exception as error:
