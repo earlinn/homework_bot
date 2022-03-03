@@ -122,10 +122,11 @@ def check_tokens():
         'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
         'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
     }
+    # применён цикл for, чтобы указать в logger.critical имя конкретного token
     for token in required_environment_variables:
         if not required_environment_variables[token]:
             logger.critical(
-                f'Отсутствует {token}! Программа принудительно остановлена.')
+                f'Отсутствует {token}!')
             return False
     return True
 
@@ -143,8 +144,10 @@ def main():
     )
 
     if not check_tokens():
-        raise KeyboardInterrupt(
-            'Отсутствуют обязательные переменные окружения!')
+        logger.critical(
+            'Отсутствуют обязательные переменные окружения! '
+            'Программа принудительно остановлена.')
+        sys.exit(1)
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
