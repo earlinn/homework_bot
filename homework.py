@@ -46,7 +46,8 @@ def send_message(bot, message):
         logger.info('Окончание отправки сообщения в Telegram чат.')
         logger.info(f'Бот отправил сообщение: {message}.')
     except Exception as error:
-        logger.error(f'Ошибка отправки сообщения в Telegram чат: {error}.')
+        logger.error(
+            f'Ошибка отправки сообщения в Telegram чат: {error.__class__}.')
 
 
 def get_api_answer(current_timestamp):
@@ -156,20 +157,16 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homeworks_list = check_response(response)
-            if homeworks_list == []:
+            homeworks = check_response(response)
+            if not homeworks:
                 logger.debug('Новых статусов по домашним работам нет.')
-            for homework in homeworks_list:
+            for homework in homeworks:
                 homework_status = parse_status(homework)
+                homework_name = homework['homework_name']
+                logger.info(
+                    f'Статус домашней работы {homework_name} обновлён.')
                 send_message(bot, homework_status)
-
             current_timestamp = int(time.time())
-            time.sleep(RETRY_TIME)
-
-        except telegram.error.Unauthorized as error:
-            logger.error(
-                'Неверный TELEGRAM_TOKEN! Ошибка telegram.error.Unauthorized.')
-            raise error
 
         except Exception as error:
             logger.error(f'Сбой в работе программы: {error}')
@@ -181,8 +178,9 @@ def main():
                 send_message(bot, message)
                 prev_error_report = current_error_report.copy()
             time.sleep(RETRY_TIME)
-        else:
-            ...
+
+        finally:
+            time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
