@@ -11,6 +11,15 @@ class UndocumentedHomeworkStatusError(Exception):
 
 
 class NoHomeworksKeyInResponseError(TypeError):
-    """Вызывается, если в ответе API отсутствует ключ homeworks."""
+    """
+    Вызывается, если в ответе API отсутствует ключ homeworks.
+    Наследник TypeError, поскольку иначе не проходят тесты (tests/test_bot.py).
+    """
+
+    pass
+
+
+class NoCurrentDateKeyInResponseError(Exception):
+    """Вызывается, если в ответе API отсутствует ключ current_date."""
 
     pass

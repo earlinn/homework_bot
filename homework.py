@@ -85,11 +85,17 @@ def check_response(response):
     if 'homeworks' not in response:
         raise exceptions.NoHomeworksKeyInResponseError(
             'Ключ homeworks отсутствует в ответе API!')
+    if 'current_date' not in response:
+        raise exceptions.NoCurrentDateKeyInResponseError(
+            'Ключ current_date отсутствует в ответе API!')
     if not isinstance(response, dict):
         raise TypeError('Ответ API не является словарём!')
-    if type(response['homeworks']) is not list:
+    if not isinstance(response['homeworks'], list):
         raise TypeError(
             'В ответе API по ключу homeworks значение не является списком!')
+    if not isinstance(response['current_date'], int):
+        raise TypeError(
+            'В ответе API по ключу current_date значение не является целым!')
     return response['homeworks']
 
 
