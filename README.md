@@ -84,4 +84,4 @@ python3 homework.py
 
 ### Авторы
 
-[Волкова Галина Дмитриевна](https://github.com/earlinn/) и Яндекс.Практикум
+[Галина Волкова](https://github.com/earlinn/) и Яндекс.Практикум
