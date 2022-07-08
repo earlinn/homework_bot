@@ -15,6 +15,8 @@ https://oauth.yandex.ru/authorize?response_type=token&client_id=1d0b9dd4d652455a
 отправит пользователю сообщение в Telegram об изменении статуса работы. Бот 
 логирует свою работу и сообщает о проблемах сообщением в Telegram.
 
+Стек: Python 3.7, python-telegram-bot, logging, flake8.
+
 ### Запуск проекта на локальном компьютере
 
 Клонировать репозиторий и перейти в него в командной строке:
